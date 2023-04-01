@@ -1,13 +1,12 @@
+import { Outlet } from "react-router-dom"
 import MobileMenuButton from "./components/MobileMenuButton"
-import Calculator from "./components/calculadora"
+
 
 function App() {
-
-
   return (
     <div >
       <MobileMenuButton/>
-      <Calculator/>
+      <Outlet/>
     </div>
   )
 }

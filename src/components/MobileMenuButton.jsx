@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
 
 const MobileMenuButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,9 +11,9 @@ const MobileMenuButton = () => {
   };
 
   return (
-    <div className="bg-gray-900 text-white">
+    <div className="bg-blue-600 text-white">
       <div className="flex justify-between items-center px-4 py-3">
-        <h1 className="text-xl font-bold">Logo</h1>
+        <h1 className="text-xl font-bold">Meus Projetos React</h1>
         <button onClick={handleToggle} className="text-2xl">
           {isOpen ? <FontAwesomeIcon icon={faTimes} /> : <FontAwesomeIcon icon={faBars} />}
         </button>
@@ -21,17 +22,17 @@ const MobileMenuButton = () => {
         <div className="px-4 py-3">
           <ul>
             <li>
-              <a href="#" className="block py-2">Home</a>
+              <Link to="/" className="block py-2">Home</Link>
             </li>
             <li>
-              <a href="#" className="block py-2">About</a>
+              <Link to="/calculadora" className="block py-2">Calculadora</Link>
             </li>
-            <li>
+            {/* <li>
               <a href="#" className="block py-2">Services</a>
             </li>
             <li>
               <a href="#" className="block py-2">Contact</a>
-            </li>
+            </li> */}
           </ul>
         </div>
       )}

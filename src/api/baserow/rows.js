@@ -23,6 +23,20 @@ const fetchTableRows = async (tableId) => {
   /* A função fetchTableRows é usada para obter todas as linhas de uma tabela no Baserow. Para utilizá-la, você precisa fornecer o ID da tabela (tableId). */
 };
 
+//função para verificar se o email já está cadastrado
+const isEmailRegistered = async (tableId,email) => {
+    const rows = await fetchTableRows(tableId);
+
+    for (const row of rows) {
+      if (row.Email === email) {
+        return true;
+      }
+    }
+  
+    return false;
+  }
+
+
 // Função para obter uma única linha da tabela no Baserow
 const fetchSingleRow = async (tableId, rowId) => {
   try {
@@ -117,4 +131,4 @@ const deleteRow = async (tableId, rowId) => {
   /*A função deleteRow é usada para excluir uma linha específica de uma tabela do Baserow. Para utilizá-la, você precisa fornecer dois argumentos: o ID da tabela (tableId) e o ID da linha que deseja excluir (rowId).*/
 };
 
-export { fetchTableRows, fetchSingleRow, createRow, updateRow, deleteRow };
+export { fetchTableRows, fetchSingleRow, createRow, updateRow, deleteRow,isEmailRegistered };

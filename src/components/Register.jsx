@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { USERS_TABLE_ID, createRow, hashPassword } from '../api/baserow';
-
+import { USERS_TABLE_ID, createRow, hashPassword, isEmailRegistered } from '../api/baserow';
+import ModalConfirm from './ModalConfirm';
 
 
 const Register = () => {
@@ -9,17 +9,34 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
-    const [showModal, setShowModal] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalTitle, setModalTitle] = useState('');
 
     const registerUser = async (e) => {
         e.preventDefault();
 
         if (password !== passwordConfirmation) {
             console.log("As senhas não correspondem");
+
+            setModalTitle("Erro");
+            setModalMessage("As senhas não correspondem");
+            //coloca o modal como true para abrir
+            setModalOpen(true);
+
+
             // Exiba uma mensagem de erro para o usuário, se necessário
-            setShowModal(true);
             return;
         }
+
+        if (await isEmailRegistered(USERS_TABLE_ID, email)) {
+            console.log("Email já cadastrado");
+
+            setModalTitle("Atenção");
+            setModalMessage("Email já cadastrado");
+            setModalOpen(true); // Abra o modal informando que o email já está cadastrado
+            return;
+          }
 
         const hashedPassword = await hashPassword(password);
 
@@ -41,7 +58,9 @@ const Register = () => {
         }
     };
 
-
+    const handleCloseModal = () => {
+        setModalOpen(false); // muda o estado do modal para false
+    };
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -65,6 +84,7 @@ const Register = () => {
                                     placeholder="Nome"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
+                                    required
                                 />
                             </div>
                             <div className="col-span-2 sm:col-span-1">
@@ -79,6 +99,7 @@ const Register = () => {
                                     placeholder="Sobrenome"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
+                                    required
                                 />
                             </div>
                         </div>
@@ -94,6 +115,7 @@ const Register = () => {
                                 placeholder="Endereço de Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                required
                             />
                         </div>
                         <div className="mt-4">
@@ -108,6 +130,7 @@ const Register = () => {
                                 placeholder="Informe uma senha"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                required
                             />
                         </div>
                         <div className="mt-4">
@@ -122,6 +145,7 @@ const Register = () => {
                                 placeholder="Confirme sua senha"
                                 value={passwordConfirmation}
                                 onChange={(e) => setPasswordConfirmation(e.target.value)}
+                                required
                             />
                         </div>
                         <div className="mt-6">
@@ -135,6 +159,17 @@ const Register = () => {
                     </form>
                 </div>
             </div>
+            {
+                modalOpen && (
+                    <ModalConfirm
+                        isOpen={modalOpen}
+                        title={modalTitle}
+                        message={modalMessage}
+                        closeModal={handleCloseModal}
+                    />
+                )
+            }
+
         </div>
     );
 };

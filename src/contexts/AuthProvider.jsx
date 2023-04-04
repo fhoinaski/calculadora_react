@@ -1,7 +1,7 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { USERS_TABLE_ID, createRow, hashPassword, isEmailRegistered, fetchTableRows, checkPassword } from '../api/baserow';
 import { useNavigate } from 'react-router-dom';
-
+import { generateToken } from '../api/jwt/token';
 
 export const AuthContext = createContext();
 
@@ -14,79 +14,96 @@ const AuthProvider = ({ children }) => {
     passwordConfirmation: '',
   });
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("");
+  const [auth, setAuth] = useState({
+    isLoggedIn: false,
+    token: '',
+    user: {},
+  });
+
   const navigator = useNavigate();
 
 
-
-
-
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("email");
-    if (savedEmail) {
-      setFormData((prevFormData) => ({ ...prevFormData, email: savedEmail }));
+  const checkStoredAuthData = useCallback(() => {
+    const token = sessionStorage.getItem('token');
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    const tokenExpiresIn = sessionStorage.getItem('tokenExpiresIn');
+  
+    if (token && user && isTokenValid(token, tokenExpiresIn)) {
+      setAuth({
+        isLoggedIn: true,
+        token: token,
+        user: user,
+      });
+    } else {
+      sessionStorage.clear();
     }
   }, []);
+  
+  useEffect(() => {
+    checkStoredAuthData();
+  }, [checkStoredAuthData]);
+
+
+  
+
+  const isTokenValid = (token, tokenExpiresIn) => {
+    if (Date.now() < tokenExpiresIn) {
+      return true;
+    } else {
+      console.error('Token expirado');
+      return false;
+    }
+  };
 
   const checkUserExists = async (email, password) => {
-    // importa o id da tabela de usuários da API
     const rows = await fetchTableRows(USERS_TABLE_ID);
-    console.log("Linhas retornadas:", rows);
-
-    // Encontre o usuário que corresponde ao e-mail fornecido
     const user = rows.find((row) => row.Email === email);
-    console.log("Usuário encontrado:", user);
-    setUserName(user.Nome);
-    console.log("Nome do usuário:", userName);
-
 
     if (user) {
-      // Verifique se a senha fornecida corresponde à senha armazenada (hashed) para o usuário
-      const isPasswordMatch = await checkPassword(password, user.Password);
-      console.log("A senha fornecida está correta:", isPasswordMatch);
-      return isPasswordMatch;
+      return await checkPassword(password, user.Password) ? user : null;
     }
 
     console.log("Usuário não encontrado");
-    return false;
+    return null;
   };
 
   const doLogin = async (e) => {
-    console.log('doLogin called');
     e.preventDefault();
-    const userExists = await checkUserExists(formData.email, formData.password);
+    const user = await checkUserExists(formData.email, formData.password);
 
-    if (userExists) {
-      console.log("Usuário encontrado.");
+    if (user) {
+      const { token, expiresIn } = generateToken(formData.email);
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('tokenExpiresIn', expiresIn);
+      sessionStorage.setItem('user', JSON.stringify({ email: formData.email, name: user.Nome }));
 
-      setIsLoggedIn(true); // Atualize o estado para indicar que o usuário está logado
-      // Adicione a lógica para navegar até a página inicial ou outra página após o login bem-sucedido
-      localStorage.setItem("email", formData.email);
-      localStorage.setItem("logado", isLoggedIn);
-      // Redirecionar o usuário para a página inicial depois de logado
-      navigator('/')
-      return ;
+      setAuth({
+        isLoggedIn: true,
+        token: token,
+        user: { email: formData.email, name: user.Nome },
+      });
 
-
-
-
+      navigator('/');
     } else {
       console.log("Usuário não encontrado.");
-      // Mostre uma mensagem de erro para o usuário, se necessário
     }
   };
 
-
   const doLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem("email");
-    localStorage.removeItem("logado");
-    setUserName("");
+    setAuth({
+      isLoggedIn: false,
+      token: '',
+      user: {},
+    });
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("tokenExpiresIn");
+    sessionStorage.removeItem("user");
   };
+  
 
-
+  const updateFormData = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+  };
 
   const [modalState, setModalState] = useState({
     open: false,
@@ -94,20 +111,14 @@ const AuthProvider = ({ children }) => {
     message: '',
   });
 
-  const updateFormData = (name, value) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-
   const updateModalState = (newState) => {
-    setModalState({
-      ...modalState,
-      ...newState,
-    });
+    setModalState({ ...modalState, ...newState });
   };
+
+  const handleCloseModal = () => {
+    setModalState({ ...modalState, open: false });
+  };
+
 
   const registerUser = async (e) => {
     e.preventDefault();
@@ -157,11 +168,6 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-
-  const handleCloseModal = () => {
-    setModalState({ ...modalState, open: false });
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -172,10 +178,9 @@ const AuthProvider = ({ children }) => {
         registerUser,
         handleCloseModal,
         doLogin,
-        isLoggedIn,
-        setIsLoggedIn,
+        isLoggedIn: auth.isLoggedIn,
         doLogout,
-        userName,
+        userName: auth.user.name,
 
       }}
     >

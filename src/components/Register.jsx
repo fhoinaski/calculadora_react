@@ -1,73 +1,28 @@
-import React, { useState } from 'react';
-import { USERS_TABLE_ID, createRow, hashPassword, isEmailRegistered } from '../api/baserow';
+import React from 'react';
+import useAuth from '../contexts/useAuth'; // Importe o custom hook useAuth
 import ModalConfirm from './ModalConfirm';
 
-
 const Register = () => {
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordConfirmation, setPasswordConfirmation] = useState('');
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
-    const [modalTitle, setModalTitle] = useState('');
+  const {
+    formData,
+    updateFormData,
+    modalState,
+    updateModalState,
+    registerUser,
+    handleCloseModal,
+  } = useAuth(); // Use o custom hook useAuth para acessar os dados e funções do AuthProvider
 
-    const registerUser = async (e) => {
-        e.preventDefault();
-
-        if (password !== passwordConfirmation) {
-            console.log("As senhas não correspondem");
-
-            setModalTitle("Erro");
-            setModalMessage("As senhas não correspondem");
-            //coloca o modal como true para abrir
-            setModalOpen(true);
-
-
-            // Exiba uma mensagem de erro para o usuário, se necessário
-            return;
-        }
-
-        if (await isEmailRegistered(USERS_TABLE_ID, email)) {
-            console.log("Email já cadastrado");
-
-            setModalTitle("Atenção");
-            setModalMessage("Email já cadastrado");
-            setModalOpen(true); // Abra o modal informando que o email já está cadastrado
-            return;
-          }
-
-        const hashedPassword = await hashPassword(password);
-
-        const newRowData = {
-            "Nome": firstName,
-            "Sobrenome": lastName,
-            "Email": email,
-            "Password": hashedPassword,
-        };
-
-        const newRow = await createRow(USERS_TABLE_ID, newRowData);
-
-        if (newRow) {
-            console.log("Usuário cadastrado com sucesso");
-            // Adicione a lógica para navegar até a página de login ou outra página após o registro bem-sucedido
-        } else {
-            console.log("Ocorreu um erro ao cadastrar o usuário");
-            // Mostre uma mensagem de erro para o usuário, se necessário
-        }
-    };
-
-    const handleCloseModal = () => {
-        setModalOpen(false); // muda o estado do modal para false
-    };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    updateFormData(name, value);
+  };
 
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="py-12 sm:px-6 lg:px-8">
                 <div className="max-w-md mx-auto bg-white rounded-md overflow-hidden shadow-md">
-                    <div className="py-4 px-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Crie sua Conta</h2>
+                    <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                        <h2 className="text-2xl text-center font-bold text-gray-800">Crie sua Conta</h2>
 
                     </div>
                     <form className="px-6 py-4" onSubmit={registerUser}>
@@ -78,12 +33,12 @@ const Register = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    id="first_name"
-                                    name="first_name"
+                                    id="nome"
+                                    name="nome"
                                     className="w-full border border-gray-300 p-2 rounded-lg"
                                     placeholder="Nome"
-                                    value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
+                                    value={formData.firstName}
+                                    onChange={handleInputChange}
                                     required
                                 />
                             </div>
@@ -93,12 +48,12 @@ const Register = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    id="last_name"
-                                    name="last_name"
+                                    id="sobrenome"
+                                    name="sobrenome"
                                     className="w-full border border-gray-300 p-2 rounded-lg"
                                     placeholder="Sobrenome"
-                                    value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
+                                    value={formData.lastName}
+                                    onChange={handleInputChange}
                                     required
                                 />
                             </div>
@@ -113,8 +68,8 @@ const Register = () => {
                                 name="email"
                                 className="w-full border border-gray-300 p-2 rounded-lg"
                                 placeholder="Endereço de Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={formData.email}
+                                onChange={handleInputChange}
                                 required
                             />
                         </div>
@@ -128,8 +83,8 @@ const Register = () => {
                                 name="password"
                                 className="w-full border border-gray-300 p-2 rounded-lg"
                                 placeholder="Informe uma senha"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                value={formData.password}
+                                onChange={handleInputChange}
                                 required
                             />
                         </div>
@@ -139,12 +94,12 @@ const Register = () => {
                             </label>
                             <input
                                 type="password"
-                                id="password_confirmation"
-                                name="password_confirmation"
+                                id="passwordConfirmation"
+                                name="passwordConfirmation"
                                 className="w-full border border-gray-300 p-2 rounded-lg"
                                 placeholder="Confirme sua senha"
-                                value={passwordConfirmation}
-                                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                                value={formData.passwordConfirmation}
+                                onChange={handleInputChange}
                                 required
                             />
                         </div>
@@ -160,12 +115,12 @@ const Register = () => {
                 </div>
             </div>
             {
-                modalOpen && (
+  modalState.open && (
                     <ModalConfirm
-                        isOpen={modalOpen}
-                        title={modalTitle}
-                        message={modalMessage}
-                        closeModal={handleCloseModal}
+                    isOpen={modalState.open}
+                    title={modalState.title}
+                    message={modalState.message}
+                    closeModal={handleCloseModal}
                     />
                 )
             }

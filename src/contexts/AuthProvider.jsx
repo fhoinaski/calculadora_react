@@ -1,9 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { USERS_TABLE_ID, createRow, hashPassword, isEmailRegistered, fetchTableRows, checkPassword } from '../api/baserow';
-import { useRouter } from 'vue-router';
-
-
-
+import { useNavigate } from 'react-router-dom';
 
 
 export const AuthContext = createContext();
@@ -19,7 +16,7 @@ const AuthProvider = ({ children }) => {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
-  const router = useRouter();
+  const navigator = useNavigate();
 
 
 
@@ -65,12 +62,12 @@ const AuthProvider = ({ children }) => {
       console.log("Usuário encontrado.");
 
       setIsLoggedIn(true); // Atualize o estado para indicar que o usuário está logado
-      console.log("Nome do usuário:", userName);
       // Adicione a lógica para navegar até a página inicial ou outra página após o login bem-sucedido
-      localStorage.setItem("email",);
+      localStorage.setItem("email", formData.email);
       localStorage.setItem("logado", isLoggedIn);
-      // Redirecionar o usuário para a página inicial
-      router.push('/calculadora');
+      // Redirecionar o usuário para a página inicial depois de logado
+      navigator('/')
+      return ;
 
 
 

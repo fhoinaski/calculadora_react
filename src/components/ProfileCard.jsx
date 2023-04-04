@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import useAuth from '../contexts/useAuth';
 
 const ProfileCard = () => {
+  const [nomeUser, setNomeUser] = useState("Meus Projetos React");
+  const { userName } = useAuth();
+
+  useEffect(() => {
+    if (userName) {
+      setNomeUser(` ${userName}!`);
+    } else {
+      setNomeUser("Programador");
+    }
+  }, [userName]);
+
   return (
     <div className="flex items-center justify-center m-2">
       <div className="bg-white shadow-lg rounded-lg w-80">
@@ -8,7 +20,7 @@ const ProfileCard = () => {
           <img src="https://source.unsplash.com/random/400x400" className="rounded-full w-48 h-48 object-cover" alt="profile" />
         </div>
         <div className="p-4 flex items-center flex-col">
-          <h1 className="text-gray-900 font-bold text-2xl">John Doe</h1>
+          <h1 className="text-gray-900 font-bold text-2xl">{nomeUser}</h1>
           <p className="text-gray-600 text-sm mt-2">Frontend Developer</p>
           <div className="mt-3">
             <a href="#" className="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium">Follow</a>

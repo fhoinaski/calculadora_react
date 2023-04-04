@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
+import LoginLogoutIcon from './LoginLogout';
+import useAuth from '../contexts/useAuth';
 
 const MobileMenuButton = () => {
+  const [titulo , setTitulo] = useState("Meus Projetos React");
   const [isOpen, setIsOpen] = useState(false);
+
+ 
+  const { userName } = useAuth();
+
+  useEffect(() => {
+    if (userName) {
+      setTitulo(`Que bom te ver, ${userName}!`);
+    } else {
+      setTitulo("Meus Projetos React");
+    }
+  }, [userName]);
+  
 
   // Abre ou fecha o menu
   const handleToggle = () => {
@@ -19,7 +34,7 @@ const MobileMenuButton = () => {
   return (
     <div className={isOpen ? "bg-gray-800 text-white" : "bg-gray-900 text-white"}>
       <div className="flex justify-between items-center px-4 py-3">
-        <h1 className="text-xl font-bold"><Link to="/">Meus Projetos React</Link></h1>
+        <h1 className="text-xl font-bold"><Link to="/">{titulo}</Link></h1>
         <button onClick={handleToggle} className="text-2xl">
           {isOpen ? <FontAwesomeIcon icon={faTimes} /> : <FontAwesomeIcon icon={faBars} />}
         </button>
@@ -42,12 +57,9 @@ const MobileMenuButton = () => {
                 Calculadora
               </Link>
             </li>
-            {/* <li>
-              <a href="#" className="block py-2">Services</a>
+             <li>
+              <LoginLogoutIcon />
             </li>
-            <li>
-              <a href="#" className="block py-2">Contact</a>
-            </li> */}
           </ul>
         </div>
       )}

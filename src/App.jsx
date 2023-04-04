@@ -6,8 +6,8 @@ import AuthProvider from "./contexts/AuthProvider"
 function App() {
   return (
     <div >
-      <MobileMenuButton/>
       <AuthProvider>
+      <MobileMenuButton/>
       <Outlet/>
       </AuthProvider>
     </div>

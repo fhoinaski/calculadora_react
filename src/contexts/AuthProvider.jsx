@@ -1,9 +1,16 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { USERS_TABLE_ID, createRow, hashPassword, isEmailRegistered, fetchTableRows, checkPassword } from '../api/baserow';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { generateToken } from '../api/jwt/token';
+import {salvaTokendaSessaoCookie} from '../api/jwt/setCookies'
+import Cookies from 'js-cookie';
 
 export const AuthContext = createContext();
+
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
 
 const AuthProvider = ({ children }) => {
   const [formData, setFormData] = useState({
@@ -14,46 +21,68 @@ const AuthProvider = ({ children }) => {
     passwordConfirmation: '',
   });
 
-  const [auth, setAuth] = useState({
+   const [auth, setAuth] = useState({
     isLoggedIn: false,
     token: '',
     user: {},
   });
 
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [redirectTo, setRedirectTo] = useState(null);
 
+
+  const isTokenValid = () => {
+    const token = Cookies.get('token');
+    const tokenExpiresIn = Cookies.get('tokenExpiresIn');
+  
+    console.log('Cookies:', document.cookie);
+    
+    
+    if (token && Date.now() < tokenExpiresIn) {
+      return true;
+    }
+    return false;
+  };
+  
 
   const checkStoredAuthData = useCallback(() => {
-    const token = sessionStorage.getItem('token');
+    console.log('Verificando dados de autenticação armazenados...');
+    const token = Cookies.get('token');
     const user = JSON.parse(sessionStorage.getItem('user'));
-    const tokenExpiresIn = sessionStorage.getItem('tokenExpiresIn');
-  
-    if (token && user && isTokenValid(token, tokenExpiresIn)) {
+    const tokenExpiresIn = Cookies.get('tokenExpiresIn');
+
+    console.log(sessionStorage.getItem('user')) 
+    
+    if (token && user && isTokenValid()) {
       setAuth({
         isLoggedIn: true,
         token: token,
         user: user,
       });
+      console.log(auth)
     } else {
-      sessionStorage.clear();
+      if (token && !isTokenValid()) {
+        Cookies.remove('token');
+        Cookies.remove('tokenExpiresIn');
+        sessionStorage.clear();
+      }
     }
+  
   }, []);
   
+  
+  
+
   useEffect(() => {
     checkStoredAuthData();
   }, [checkStoredAuthData]);
-
-
+  useEffect(() => {
+    setLoading(false);
+  }, [auth]);
+ 
   
-
-  const isTokenValid = (token, tokenExpiresIn) => {
-    if (Date.now() < tokenExpiresIn) {
-      return true;
-    } else {
-      console.error('Token expirado');
-      return false;
-    }
-  };
 
   const checkUserExists = async (email, password) => {
     const rows = await fetchTableRows(USERS_TABLE_ID);
@@ -72,22 +101,28 @@ const AuthProvider = ({ children }) => {
     const user = await checkUserExists(formData.email, formData.password);
 
     if (user) {
-      const { token, expiresIn } = generateToken(formData.email);
-      sessionStorage.setItem('token', token);
-      sessionStorage.setItem('tokenExpiresIn', expiresIn);
-      sessionStorage.setItem('user', JSON.stringify({ email: formData.email, name: user.Nome }));
-
+      const { token } = generateToken(formData.email);
+      salvaTokendaSessaoCookie(token);
+      sessionStorage.setItem('user', JSON.stringify(user));
+    
       setAuth({
         isLoggedIn: true,
         token: token,
-        user: { email: formData.email, name: user.Nome },
+        user: { email: formData.email, Nome: user.Nome },
       });
 
-      navigator('/');
+      const targetPath = location.state?.from || '/'; // 
+      setRedirectTo(targetPath);
     } else {
       console.log("Usuário não encontrado.");
-    }
+    }    
   };
+  useEffect(() => {
+    if (redirectTo) {
+      navigate(redirectTo);
+      setRedirectTo(null);
+    }
+  }, [redirectTo, navigate]);
 
   const doLogout = () => {
     setAuth({
@@ -95,11 +130,10 @@ const AuthProvider = ({ children }) => {
       token: '',
       user: {},
     });
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("tokenExpiresIn");
-    sessionStorage.removeItem("user");
-  };
   
+    Cookies.remove('token'); // Correção aqui
+  };
+
 
   const updateFormData = (name, value) => {
     setFormData({ ...formData, [name]: value });
@@ -180,7 +214,9 @@ const AuthProvider = ({ children }) => {
         doLogin,
         isLoggedIn: auth.isLoggedIn,
         doLogout,
-        userName: auth.user.name,
+        userName: auth.user.Nome,
+        loading,
+        location,
 
       }}
     >

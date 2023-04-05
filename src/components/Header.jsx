@@ -15,6 +15,7 @@ const MobileMenuButton = () => {
   useEffect(() => {
     if (userName) {
       setTitulo(`Que bom te ver, ${userName}!`);
+      console.log("nome passado "+userName)
     } else {
       setTitulo("Meus Projetos React");
     }
@@ -30,7 +31,7 @@ const MobileMenuButton = () => {
   const closeMenu = () => {
     setIsOpen(false);
   };
-
+  console.log('MobileMenuButton renderizado')
   return (
     <div className={isOpen ? "bg-gray-800 text-white" : "bg-gray-900 text-white"}>
       <div className="flex justify-between items-center px-4 py-3">

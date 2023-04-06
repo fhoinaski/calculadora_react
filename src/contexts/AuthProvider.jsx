@@ -103,7 +103,11 @@ const AuthProvider = ({ children }) => {
     if (user) {
       const { token } = generateToken(formData.email);
       salvaTokendaSessaoCookie(token);
-      sessionStorage.setItem('user', JSON.stringify(user));
+      const userToStore = {
+        Nome: user.Nome,
+        Email: user.Email,
+      };
+      sessionStorage.setItem('user', JSON.stringify(userToStore));
     
       setAuth({
         isLoggedIn: true,
@@ -131,7 +135,15 @@ const AuthProvider = ({ children }) => {
       user: {},
     });
   
-    Cookies.remove('token'); // Correção aqui
+    // Remover os cookies
+    Cookies.remove('token');
+    Cookies.remove('tokenExpiresIn');
+  
+    // Limpar os dados da sessão
+    sessionStorage.clear();
+  
+    // Redirecionar o usuário para a página de login ou outra página apropriada
+    navigate('/login');
   };
 
 

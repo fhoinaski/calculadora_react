@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+Footer
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
